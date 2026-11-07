@@ -2468,6 +2468,25 @@ def show_pokemon(mon, width=180):
         st.caption("이미지를 불러오지 못했어요.")
 
 
+def capture_scene_html(result):
+    mon = result["mon"]
+    art = sprite(mon.get("image_id", mon["number"]), mon.get("shiny", False))
+    data = {
+        "name": mon["name"], "level": mon["level"],
+        "rarity": mon["rarity"], "caught": bool(result["caught"]),
+        "ball": result.get("ball", mon.get("ball", "몬스터볼")),
+        "image": "data:image/png;base64," + base64.b64encode(art).decode() if art else "",
+    }
+    # Escape HTML delimiters before embedding JSON into an inline script.
+    encoded = json.dumps(data, ensure_ascii=True).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+    template = '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>\n*{box-sizing:border-box}body{margin:0;color:#f8faff;font-family:system-ui,-apple-system,sans-serif}.scene{position:relative;height:470px;overflow:hidden;border:1px solid #ffffff24;border-radius:28px;background:radial-gradient(ellipse at 50% 60%,#324970 0%,#10223d 50%,#071326 100%);isolation:isolate}.scene:before{content:\'\';position:absolute;inset:0;background:radial-gradient(circle at 12% 22%,#fff8 0 1px,transparent 2px),radial-gradient(circle at 85% 31%,#fff7 0 1px,transparent 2px),radial-gradient(circle at 72% 12%,#fff9 0 1px,transparent 2px),radial-gradient(circle at 28% 40%,#fff6 0 1px,transparent 2px)}.controls{position:absolute;right:16px;top:16px;display:flex;gap:8px;z-index:8}button{border:1px solid #fff4;background:#152740;color:white;border-radius:30px;padding:8px 14px;font-size:13px;cursor:pointer}button:hover{background:#2b4260}button:focus-visible{outline:3px solid #f9d973;outline-offset:3px}.hint{position:absolute;top:24px;left:24px;font-size:11px;letter-spacing:.22em;color:#b4c4df}.ring{position:absolute;width:240px;height:54px;border:1px solid #89afdb66;border-radius:50%;left:calc(50% - 120px);top:304px;background:#72a5dd0d;box-shadow:0 0 35px #7cafff14}.creature{position:absolute;top:56px;left:calc(50% - 100px);width:200px;height:200px;display:grid;place-items:center;filter:drop-shadow(0 10px 20px #0006);transform-origin:50% 85%;z-index:3}.creature img{width:100%;height:100%;object-fit:contain}.fallback{font-size:88px}.ball-wrap{position:absolute;top:229px;left:calc(50% - 42px);width:84px;height:84px;z-index:4;transform-origin:50% 90%}.ball{position:absolute;inset:0;border:5px solid #172033;border-radius:50%;background:linear-gradient(to bottom,var(--ball,#ed4453) 0 45%,#172033 45% 55%,#f5f7ff 55% 100%);box-shadow:inset 7px 8px 12px #ffffff5c,inset -8px -9px 14px #0003,0 12px 16px #0005}.ball:after{content:\'\';position:absolute;left:calc(50% - 14px);top:calc(50% - 14px);width:28px;height:28px;background:#edf2fa;border:5px solid #172033;border-radius:50%;box-shadow:inset 0 0 0 2px #c3ccda}.ball.bright:after{background:#ffdc76;box-shadow:0 0 24px #ffd86f}.ball.super:before,.ball.hyper:before,.ball.master:before{content:\'\';position:absolute;left:14px;right:14px;height:14px;top:7px;background:var(--stripe,#e74757);border-radius:15px 15px 4px 4px;transform:rotate(-7deg)}.ball.master:before{content:\'M\';color:white;background:transparent;text-align:center;font-size:17px;font-weight:900;top:0}.label{position:absolute;bottom:33px;text-align:center;left:15px;right:15px;z-index:6}.label h2{margin:0 0 9px;font-size:clamp(24px,4vw,38px);letter-spacing:-.05em}.label p{margin:0;color:#c6d5ed;font-size:14px}.dots{position:absolute;top:330px;left:0;right:0;display:flex;gap:8px;justify-content:center}.dots i{width:7px;height:7px;background:#d5e1f42b;border-radius:50%;transition:background .12s,box-shadow .12s}.dots i.on{background:#ffe6a4;box-shadow:0 0 12px #ffd15e}.flash{position:absolute;inset:0;background:#fff2c5;opacity:0;z-index:5;pointer-events:none}.halo{position:absolute;inset:20px;background:radial-gradient(circle at 50% 52%,#ffd97950,transparent 55%);opacity:0;pointer-events:none}.star{position:absolute;color:#ffe99e;font-size:42px;opacity:0;left:50%;top:264px;z-index:5;filter:drop-shadow(0 0 8px #ffdb69)}.s1{--x:-115px;--y:-105px;--r:-20deg}.s2{--x:85px;--y:-126px;--r:12deg}.s3{--x:-20px;--y:-165px;--r:5deg}.particle{position:absolute;left:50%;top:270px;width:6px;height:12px;border-radius:2px;opacity:0;background:var(--color);z-index:5}.anim-in{animation:absorb .62s ease-in forwards}.anim-shake{animation:shake .48s ease-in-out}.anim-drop{animation:drop .48s cubic-bezier(.3,.8,.6,1) forwards}.won .ball-wrap{animation:land .5s ease-out}.won .halo{opacity:1;transition:opacity .6s}.won .star{animation:star 1.4s ease-out forwards}.won .s2{animation-delay:.08s}.won .s3{animation-delay:.16s}.won .flash,.lost .flash{animation:flash .55s ease-out}.won .label h2{color:#ffe49a;animation:title .48s ease-out}.won .particle{animation:confetti 1.6s ease-out forwards;animation-delay:var(--delay)}.lost .ball-wrap{animation:open .35s forwards}.lost .creature{animation:escape .65s cubic-bezier(.2,.8,.4,1) forwards}.lost .label h2{color:#ffcfb5}.won .dots,.lost .dots{opacity:0}.replay{position:absolute;left:16px;bottom:16px;z-index:8;padding:6px 10px;font-size:11px;opacity:.7}\n@keyframes absorb{0%{transform:translateY(0) scale(1);filter:drop-shadow(0 0 10px #fff)}40%{opacity:1;filter:brightness(2) drop-shadow(0 0 20px #fff)}100%{transform:translateY(140px) scale(0);opacity:0;filter:brightness(3)}}@keyframes drop{0%{transform:translateY(-55px) scale(.65);opacity:0}65%{transform:translateY(6px) scale(1);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}@keyframes shake{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-10px) rotate(-18deg)}65%{transform:translateX(9px) rotate(16deg)}}@keyframes land{0%{transform:scale(1.15)}45%{transform:scale(.94)}100%{transform:scale(1)}}@keyframes star{0%{opacity:0;transform:translate(-50%,0) scale(.1)}25%{opacity:1}65%,100%{opacity:1;transform:translate(var(--x),var(--y)) rotate(var(--r)) scale(1)}}@keyframes flash{0%{opacity:.8}100%{opacity:0}}@keyframes title{0%{transform:translateY(14px) scale(.9);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}@keyframes confetti{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r))}}@keyframes open{100%{transform:translateY(12px) scale(1.4);opacity:0}}@keyframes escape{0%{transform:translateY(125px) scale(0);opacity:0}65%{transform:translateY(-12px) scale(1.1);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important}.particle{display:none}.scene .star{animation-duration:.01ms!important}}@media(max-width:480px){.hint{top:65px;left:18px}.scene{border-radius:18px}.replay{bottom:8px;left:auto;right:12px}}\n</style></head><body><section class="scene" id="scene" aria-label="포획 결과 연출"><div class="hint">SLEEP FREE · CAPTURE</div><div class="controls"><button id="audio" type="button">🔊 소리 켜기</button></div><div class="halo"></div><div class="ring"></div><div class="creature" id="creature"></div><div class="ball-wrap" id="ballWrap"><div class="ball" id="ball"></div></div><div class="flash"></div><div class="star s1">✦</div><div class="star s2">✦</div><div class="star s3">✦</div><div class="dots"><i></i><i></i><i></i></div><div class="label" aria-live="polite"><h2 id="title">들어갔다…!</h2><p id="subtitle">볼 안에서 움직이고 있어요.</p></div><button class="replay" id="replay" type="button">↻ 연출 다시 보기</button></section><script>\nconst data = __CAPTURE_DATA__;\nconst scene=document.getElementById(\'scene\'), creature=document.getElementById(\'creature\'), wrap=document.getElementById(\'ballWrap\'), ball=document.getElementById(\'ball\'), title=document.getElementById(\'title\'), subtitle=document.getElementById(\'subtitle\'), audioBtn=document.getElementById(\'audio\');\nif(data.image){const img=document.createElement(\'img\');img.src=data.image;img.alt=data.name;creature.append(img)}else{const fallback=document.createElement(\'span\');fallback.className=\'fallback\';fallback.textContent=\'🌟\';creature.append(fallback)}\nconst palette={\'몬스터볼\':[\'#ed4453\',\'normal\',\'#fff\'],\'슈퍼볼\':[\'#4285df\',\'super\',\'#ed4453\'],\'하이퍼볼\':[\'#293141\',\'hyper\',\'#ffce55\'],\'마스터볼\':[\'#8856bd\',\'master\',\'#f2b5e7\']};\nconst theme=palette[data.ball]||palette[\'몬스터볼\'];ball.style.setProperty(\'--ball\',theme[0]);ball.style.setProperty(\'--stripe\',theme[2]);ball.classList.add(theme[1]);\nfor(let i=0;i<24;i++){const p=document.createElement(\'b\');p.className=\'particle\';const a=Math.PI*2*i/24;const r=100+(i%5)*30;p.style.setProperty(\'--x\',`${Math.cos(a)*r}px`);p.style.setProperty(\'--y\',`${Math.sin(a)*r-40}px`);p.style.setProperty(\'--r\',`${i*63}deg`);p.style.setProperty(\'--delay\',`${(i%4)*.04}s`);p.style.setProperty(\'--color\',[\'#ffe29a\',\'#91e6d5\',\'#acd0ff\',\'#efb7fa\'][i%4]);scene.append(p)}\nlet ctx=null,muted=false,timers=[],started=0,finished=false;\ntry{muted=localStorage.getItem(\'sf-capture-muted\')===\'1\'}catch(_){}\nfunction audioContext(){if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(C)ctx=new C()}return ctx}\nfunction soundButton(){const running=ctx&&ctx.state===\'running\';audioBtn.textContent=muted?\'🔇 소리 켜기\':running?\'🔊 소리 끄기\':\'🔊 소리 켜기\'}\nfunction tone(freq,delay,length=.12,volume=.07,type=\'sine\',end=null){if(muted||!ctx||ctx.state!==\'running\')return;const t=ctx.currentTime+delay,o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);if(end)o.frequency.exponentialRampToValueAtTime(end,t+length);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(volume,t+.012);g.gain.exponentialRampToValueAtTime(.001,t+length);o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+length+.02)}\nfunction jingle(){if(data.caught){[523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,i*.115,i===3?.48:.18,.065,\'triangle\'));tone(261.63,0,.5,.035)}else{tone(392,0,.25,.07,\'triangle\',196);tone(220,.2,.25,.035,\'sine\',165)}}\nfunction later(ms,fn){timers.push(setTimeout(fn,ms))}\nfunction launch(){timers.forEach(clearTimeout);timers=[];started=performance.now();finished=false;scene.classList.remove(\'won\',\'lost\');creature.classList.remove(\'anim-in\');wrap.classList.remove(\'anim-shake\',\'anim-drop\');ball.classList.remove(\'bright\');document.querySelectorAll(\'.dots i\').forEach(x=>x.classList.remove(\'on\'));title.textContent=\'들어갔다…!\';subtitle.textContent=`${data.ball}이 포켓몬을 감쌌어요.`;wrap.style.opacity=\'0\';void scene.offsetWidth;creature.classList.add(\'anim-in\');tone(700,0,.45,.035,\'sine\',250);\n later(420,()=>{wrap.style.opacity=\'1\';wrap.classList.add(\'anim-drop\')});\n [1050,1950,2850].forEach((ms,index)=>later(ms,()=>{wrap.classList.remove(\'anim-drop\',\'anim-shake\');void wrap.offsetWidth;wrap.classList.add(\'anim-shake\');document.querySelectorAll(\'.dots i\')[index].classList.add(\'on\');title.textContent=[\'한 번…\',\'두 번…\',\'세 번…!\'][index];subtitle.textContent=\'조금만 더…\';tone(170,0,.12,.065,\'sine\',100);tone(300,.11,.065,.025)}));\n later(3820,()=>{finished=true;wrap.classList.remove(\'anim-shake\');scene.classList.add(data.caught?\'won\':\'lost\');if(data.caught){ball.classList.add(\'bright\');title.textContent=`잡았다! ${data.name}!`;subtitle.textContent=`Lv.${data.level} · ${data.rarity} · 보관함에 들어왔어요.`}else{title.textContent=\'앗! 볼에서 튀어나왔다!\';subtitle.textContent=`${data.name}에게 다른 볼로 다시 도전해 보세요.`}jingle()});}\naudioBtn.addEventListener(\'click\',async()=>{try{const ac=audioContext();if(!ac){audioBtn.textContent=\'소리를 지원하지 않아요\';return}if(ac.state!==\'running\'){await ac.resume();muted=false}else muted=!muted;try{localStorage.setItem(\'sf-capture-muted\',muted?\'1\':\'0\')}catch(_){}soundButton();if(!muted){if(finished)jingle();else tone(660,0,.08,.025)}}catch(_){audioBtn.textContent=\'소리 재생을 허용해 주세요\'}});\ndocument.getElementById(\'replay\').addEventListener(\'click\',()=>{try{const ac=audioContext();if(ac&&!muted)ac.resume().catch(()=>{});soundButton()}catch(_){}launch()});\ntry{const ac=audioContext();if(ac&&!muted){ac.resume().then(soundButton).catch(soundButton)}}catch(_){}\nsoundButton();launch();window.addEventListener(\'pagehide\',()=>{timers.forEach(clearTimeout);if(ctx)ctx.close().catch(()=>{})});\n</script></body></html>\n'
+    return template.replace("__CAPTURE_DATA__", encoded)
+
+
+def capture_scene(result):
+    components.html(capture_scene_html(result), height=490, scrolling=False)
+
+
 def pick_pokemon():
     p = current()
     if p.get("encounter"):
@@ -2941,11 +2960,26 @@ with st.sidebar:
     with st.expander("🛒 몬스터볼 상점"):
         for ball, details in BALLS.items():
             st.caption(f"{ball} · 보유 {wallet()['balls'][ball]}개 · 성능 {details['power'] if ball != '마스터볼' else '확정 포획'}")
-            if st.button(f"{ball} 구매 · {details['price']}코인", key=f"buy_{ball}", disabled=wallet()["coins"] < details["price"]):
-                if action_ready() and wallet()["coins"] >= details["price"]:
-                    wallet()["coins"] -= details["price"]
-                    wallet()["balls"][ball] += 1
-                    success(f"{ball} 1개를 구매했어요.")
+            quantity = int(st.number_input(
+                f"{ball} 구매 수량",
+                min_value=1, max_value=10000, value=1, step=1,
+                key=f"buy_quantity_{ball}",
+            ))
+            total_price = details["price"] * quantity
+            affordable = wallet()["coins"] // details["price"]
+            st.caption(
+                f"개당 {details['price']:,}코인 · 총 {total_price:,}코인 "
+                f"· 현재 최대 {affordable:,}개 구매 가능"
+            )
+            if st.button(
+                f"{ball} {quantity:,}개 구매 · {total_price:,}코인",
+                key=f"buy_{ball}",
+                disabled=wallet()["coins"] < total_price,
+            ):
+                if action_ready() and wallet()["coins"] >= total_price:
+                    wallet()["coins"] -= total_price
+                    wallet()["balls"][ball] += quantity
+                    success(f"{ball} {quantity:,}개를 {total_price:,}코인에 구매했어요.")
     st.caption("수면 보상: 0~39점 5 / 40~59점 10 / 60~79점 20 / 80~89점 35 / 90~100점 50코인. 계정당 기상 날짜별 1회.")
 
 p = current()
@@ -3014,12 +3048,7 @@ elif page == "draw":
     st.caption("희귀 Lv.5 · 초희귀 Lv.15 · 전설 Lv.35 · 환상 Lv.45부터 등장. 진화형은 종별 요구 레벨 이상에서 등장해요. 돌·교환·친밀도 등 특수 진화형은 최소 Lv.20을 적용해요.")
     result = st.session_state.pop("sf_capture_result", None)
     if result:
-        art = sprite(result["mon"].get("image_id", result["mon"]["number"]), result["mon"].get("shiny", False))
-        visual = ('<img style="width:130px" src="data:image/png;base64,' + base64.b64encode(art).decode() + '">') if art else '🌟'
-        if result["caught"]:
-            st.markdown('<style>@keyframes sfCatch{0%,40%,80%{transform:rotate(-15deg)}20%,60%{transform:rotate(15deg)}100%{transform:rotate(0deg)}}.sf-catch{font-size:64px;text-align:center;animation:sfCatch .9s ease-out}</style><div class="sf-catch">🔴✨</div>', unsafe_allow_html=True)
-        else:
-            st.markdown('<style>@keyframes sfEscape{0%,35%{transform:translateY(60px) scale(0);opacity:0}60%{transform:translateY(-24px) scale(1.2);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}.sf-escape{text-align:center;font-size:60px;animation:sfEscape 1.1s ease-out}.sf-open{text-align:center;font-size:36px}</style><div class="sf-escape">' + visual + '</div><div class="sf-open">💥🔴</div>', unsafe_allow_html=True)
+        capture_scene(result)
     last = p.get("encounter")
     if last:
         show_pokemon(last, 240)
@@ -3033,14 +3062,18 @@ elif page == "draw":
                 if action_ready() and p.get("encounter", {}).get("uid") == last["uid"] and wallet()["balls"][ball] > 0:
                     wallet()["balls"][ball] -= 1
                     caught = secrets.randbelow(1000000) / 1000000 < chance
-                    st.session_state["sf_capture_result"] = {"caught": caught, "mon": dict(last)}
+                    st.session_state["sf_capture_result"] = {"caught": caught, "mon": dict(last), "ball": ball}
                     if caught:
                         last["ball"] = ball
                         p["collection"].append(last)
                         p["encounter"] = None
-                        success(f"✨ 잡았다! {last['name']}이 보관함에 들어왔어요.")
+                        cloud_save()
+                        st.session_state.sf_message = ""
+                        st.rerun()
                     else:
-                        success(f"💥 {last['name']}이 볼에서 튀어나왔어요! 볼 1개가 소모됐어요.")
+                        cloud_save()
+                        st.session_state.sf_message = ""
+                        st.rerun()
         if st.button("이 포켓몬 보내주기", key=f"release_{last['uid']}"):
             if action_ready():
                 p["encounter"] = None
