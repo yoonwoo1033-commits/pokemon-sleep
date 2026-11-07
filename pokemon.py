@@ -892,11 +892,10 @@ def cloud_login_gate():
         st.stop()
 
     if not st.session_state.get("_sfc_auth"):
-        st.title("🌙 Sleep Free 로그인")
+        st.title("🌙 Sleep Free")
         st.caption(
-            "각자의 계정으로 포켓몬과 수면 기록을 불러와요. "
-            "Supabase 사이트 로그인 계정과 "
-            "앱 사용자 계정은 별개예요."
+            "회원가입 후 각자의 계정으로 "
+            "포켓몬과 수면 기록을 저장해요."
         )
 
         if st.session_state.get("sf_profiles"):
@@ -905,8 +904,7 @@ def cloud_login_gate():
                 json.dumps(
                     {
                         "version": "sleep-free-pokemon-3",
-                        "profiles":
-                            st.session_state.sf_profiles,
+                        "profiles": st.session_state.sf_profiles,
                     },
                     ensure_ascii=False,
                 ),
@@ -914,55 +912,140 @@ def cloud_login_gate():
                 mime="application/json",
             )
 
-        with st.form("_sfc_login_form"):
-            email = st.text_input("이메일")
-            password = st.text_input(
-                "비밀번호",
-                type="password",
-            )
-            submitted = st.form_submit_button(
-                "로그인",
-                use_container_width=True,
-            )
+        login_tab, signup_tab = st.tabs(
+            ["로그인", "회원가입"]
+        )
 
-        if submitted:
-            try:
-                auth = cloud_request(
-                    "POST",
-                    "/auth/v1/token?grant_type=password",
-                    authenticated=False,
-                    json={
-                        "email": email.strip(),
-                        "password": password,
-                    },
+        with login_tab:
+            with st.form("_sfc_login_form"):
+                email = st.text_input(
+                    "이메일", key="_sfc_login_email"
+                )
+                password = st.text_input(
+                    "비밀번호",
+                    type="password",
+                    key="_sfc_login_password",
+                )
+                submitted = st.form_submit_button(
+                    "로그인",
+                    use_container_width=True,
                 )
 
+            if submitted:
+                if not email.strip() or not password:
+                    st.error("이메일과 비밀번호를 입력해 주세요.")
+                else:
+                    try:
+                        auth = cloud_request(
+                            "POST",
+                            "/auth/v1/token?grant_type=password",
+                            authenticated=False,
+                            json={
+                                "email": email.strip(),
+                                "password": password,
+                            },
+                        )
+
+                        if (
+                            not isinstance(auth, dict)
+                            or not auth.get("access_token")
+                            or not (auth.get("user") or {}).get("id")
+                        ):
+                            raise SaveConnectionError(
+                                "로그인 결과를 확인할 수 없어요."
+                            )
+
+                        st.session_state["_sfc_auth"] = auth
+                        st.session_state["_sfc_loaded"] = False
+                        st.rerun()
+
+                    except SaveConnectionError as error:
+                        st.error(str(error))
+                        st.caption(
+                            "가입할 때 정한 비밀번호를 사용해 주세요. "
+                            "이메일 인증이 필요한 계정은 "
+                            "인증을 먼저 완료해 주세요."
+                        )
+
+        with signup_tab:
+            with st.form("_sfc_signup_form"):
+                signup_email = st.text_input(
+                    "이메일", key="_sfc_signup_email"
+                )
+                signup_password = st.text_input(
+                    "비밀번호",
+                    type="password",
+                    key="_sfc_signup_password",
+                    help="6자 이상으로 입력해 주세요.",
+                )
+                signup_confirm = st.text_input(
+                    "비밀번호 확인",
+                    type="password",
+                    key="_sfc_signup_confirm",
+                )
+                signup_submitted = st.form_submit_button(
+                    "회원가입",
+                    use_container_width=True,
+                )
+
+            if signup_submitted:
+                clean_email = signup_email.strip()
+
                 if (
-                    not auth
-                    or not auth.get("access_token")
-                    or not auth.get("user", {}).get("id")
+                    not clean_email
+                    or "@" not in clean_email
+                    or not clean_email.rsplit("@", 1)[-1]
                 ):
-                    raise SaveConnectionError(
-                        "로그인 결과를 확인할 수 없어요."
-                    )
+                    st.error("올바른 이메일을 입력해 주세요.")
 
-                st.session_state["_sfc_auth"] = auth
-                st.session_state["_sfc_loaded"] = False
-                st.rerun()
+                elif len(signup_password) < 6:
+                    st.error("비밀번호는 6자 이상 입력해 주세요.")
 
-            except SaveConnectionError as error:
-                st.error(str(error))
+                elif signup_password != signup_confirm:
+                    st.error("비밀번호가 서로 달라요.")
 
-        st.info(
-            "처음이라면 앱 관리자가 Supabase → "
-            "Authentication → Users → Add user → "
-            "Create new user에서 계정을 만들어 주세요. "
-            "관리자 생성 계정은 Auto Confirm을 선택해요."
-        )
-        st.caption(
-            "공개 회원가입과 인증메일 발송은 "
-            "이 버전에 포함되지 않았어요."
-        )
+                else:
+                    try:
+                        result = cloud_request(
+                            "POST",
+                            "/auth/v1/signup",
+                            authenticated=False,
+                            json={
+                                "email": clean_email,
+                                "password": signup_password,
+                            },
+                        )
+
+                        if not isinstance(result, dict):
+                            raise SaveConnectionError(
+                                "회원가입 결과를 확인할 수 없어요."
+                            )
+
+                        if (
+                            result.get("access_token")
+                            and (result.get("user") or {}).get("id")
+                        ):
+                            st.session_state["_sfc_auth"] = result
+                            st.session_state["_sfc_loaded"] = False
+                            st.rerun()
+
+                        else:
+                            st.success(
+                                "회원가입 요청을 처리했어요. "
+                                "이메일로 인증 안내가 왔는지 확인하고, "
+                                "인증 후 로그인 탭에서 로그인해 주세요."
+                            )
+                            st.caption(
+                                "이미 가입한 이메일이라면 로그인해 주세요. "
+                                "메일이 없으면 스팸함도 확인해 주세요."
+                            )
+
+                    except SaveConnectionError as error:
+                        st.error(
+                            "회원가입을 완료하지 못했어요. "
+                            + str(error)
+                        )
+
         st.stop()
 
     if st.session_state.get("_sfc_loaded"):
