@@ -1,0 +1,26 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;font:12px sans-serif"><span id="status"></span><script>
+let lastSent = '';
+const storageKey = 'sleep-free-auth-refresh-v1';
+const send = (type, extra={}) => window.parent.postMessage({isStreamlitMessage:true,type,...extra}, '*');
+window.addEventListener('message', event => {
+  if (event.source !== window.parent || event.data.type !== 'streamlit:render') return;
+  const args = event.data.args || {};
+  let token = '', error = false;
+  try {
+    if (args.action === 'write') {
+      if (typeof args.token !== 'string' || !args.token) throw Error('missing token');
+      localStorage.setItem(storageKey,args.token);
+    } else if (args.action === 'clear') localStorage.removeItem(storageKey);
+    token = localStorage.getItem(storageKey) || '';
+  } catch (_) { error = true; }
+  const value = {token,action:args.action,error};
+  const serialized = JSON.stringify(value);
+  if (serialized !== lastSent) {
+    lastSent = serialized;
+    send('streamlit:setComponentValue', {value,dataType:'json'});
+  }
+  send('streamlit:setFrameHeight',{height:0});
+});
+send('streamlit:componentReady',{apiVersion:1});
+send('streamlit:setFrameHeight',{height:0});
+</script></body></html>
